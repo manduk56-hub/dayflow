@@ -1,4 +1,4 @@
-# Dayflow 0.1.0
+# Dayflow 0.1.1
 
 Windows용 하루 일정 생성 프로그램입니다. AI API와 계정 없이 작동합니다.
 

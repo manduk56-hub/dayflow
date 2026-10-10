@@ -1,6 +1,6 @@
 {
   "name": "dayflow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "비중으로 만드는 하루 일정표",
   "main": "main.cjs",
   "private": true,
