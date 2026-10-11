@@ -19,17 +19,6 @@
   .intro>.eyebrow{background:#e8dff4;border:1px solid #b6a3cf;padding:4px 7px;display:inline-block}
   h1{font-size:30px;line-height:1.5;letter-spacing:-1px;margin:10px 0 8px;font-weight:700}
   .intro p{font-size:12px;line-height:1.9;color:#716979}
-  .pixel-scene{position:absolute;right:24px;top:6px;width:175px;height:136px}
-  .pixel-clock{position:absolute;left:48px;top:15px;width:76px;height:76px;background:#fffdf4;clip-path:polygon(16% 0,84% 0,84% 8%,92% 8%,92% 16%,100% 16%,100% 84%,92% 84%,92% 92%,84% 92%,84% 100%,16% 100%,16% 92%,8% 92%,8% 84%,0 84%,0 16%,8% 16%,8% 8%,16% 8%);box-shadow:inset 0 0 0 6px #39324b}
-  .pixel-clock:before{content:'';position:absolute;inset:6px;border:4px solid #b4a2da}
-  .pixel-clock .clock-hand{position:absolute;left:38px;bottom:38px;transform-origin:50% 100%;background:#39324b}
-  .pixel-clock .clock-hour{width:6px;height:17px;margin-left:-3px}
-  .pixel-clock .clock-minute{width:4px;height:25px;margin-left:-2px}
-  .pixel-clock .clock-second{width:2px;height:27px;margin-left:-1px;background:#b05c83}
-  .pixel-clock .clock-pin{position:absolute;left:35px;top:35px;width:6px;height:6px;background:#39324b}
-  .scene-star{position:absolute;color:#7560b2;font-size:25px}
-  .star-one{left:10px;top:9px}.star-two{right:5px;top:59px;color:#367f77}
-  .scene-caption{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10px;color:#716979;letter-spacing:1px}
   .workspace{grid-template-columns:380px minmax(0,1fr);gap:26px}
   .card{border:2px solid var(--ink);border-radius:0;background:var(--paper);box-shadow:5px 5px 0 #c2b5ce;padding:20px}
   .editor .card{margin-bottom:18px}
@@ -105,52 +94,18 @@
   .plan{padding:20px}.plan-heading{margin:-20px -20px 0;padding:13px 16px;align-items:flex-start;flex-wrap:wrap}
   .plan-heading h2{font-size:18px}.metrics strong{font-size:16px}.metrics>div{padding-left:10px}
   .timeline-row{grid-template-columns:77px 1fr;gap:7px}.block{gap:7px;padding:11px 8px}
-  .intro{padding-right:185px}.pixel-scene{right:0}
+  .intro{padding-right:185px}
 }
 @media screen and (max-width:740px){
-  .workspace{grid-template-columns:1fr}.intro{padding-right:0;min-height:0}.pixel-scene{display:none}
+  .workspace{grid-template-columns:1fr}.intro{padding-right:0;min-height:0}
   h1{font-size:26px}.intro p{font-size:11px}.local-badge{font-size:9px;padding:5px 7px}
   .brand{font-size:21px;gap:9px}.brand-mark{font-size:21px}.brand small{font-size:10px}
   .plan{min-height:450px}.plan-empty{padding:60px 0}.metrics strong{font-size:20px}
 }
-@media print{.pixel-scene{display:none!important}}
 
-/* A compact timer replaces the introductory banner. */
-.timer{display:grid;grid-template-columns:minmax(0,1fr) 175px minmax(0,1fr) minmax(0,1fr);align-items:center;gap:16px;margin-bottom:28px;padding:16px 24px}
-.timer-info h2{margin:3px 0 11px;font-size:18px}
-.timer-info{position:relative}
-.timer-art.pixel-scene{position:relative;right:auto;top:auto;width:175px;height:136px;pointer-events:none;display:block}
-.timer-art .pixel-clock{left:48px;top:15px;transform:none}
-.timer-modes{display:flex;gap:0;max-width:250px;border:2px solid var(--ink)}
-.timer-modes button{flex:1;border:0;border-radius:0;background:#f5f0e7;padding:5px 10px;font-size:12px;color:var(--muted);white-space:nowrap}
-.timer-modes button+button{border-left:2px solid var(--ink)}
-.timer-modes button[aria-pressed=true]{background:#e8dff4;color:#5e488e}
-.timer-modes button:disabled{cursor:default;opacity:.7}
-.timer-clock{display:flex;align-items:center;flex-direction:column;border-left:1px dashed var(--line);border-right:1px dashed var(--line);padding:0 24px}
-#timer-display{font-size:56px;line-height:1.1;letter-spacing:2px;font-variant-numeric:tabular-nums;color:#5e488e;white-space:nowrap}
-#timer-status{font-size:11px;color:var(--muted);margin:6px 0 10px}
-#timer-progress{appearance:none;-webkit-appearance:none;border:1px solid #9a8d9f;border-radius:0;width:100%;max-width:210px;height:8px;background:#eee6f6}
-#timer-progress::-webkit-progress-bar{background:#eee6f6}
-#timer-progress::-webkit-progress-value{background:#7560b2}
-.timer-controls{justify-self:end;width:100%;max-width:265px}
-.timer-duration{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-bottom:13px}
-.timer-duration>span{display:flex;gap:8px;align-items:center}
-#timer-minutes{width:72px;margin:0;padding:5px 8px;font-size:14px}
-.timer-actions{display:flex;gap:12px;align-items:stretch}
-.timer-actions .primary{width:auto;flex:1;justify-content:center;font-weight:400;padding:8px 12px;min-width:0;font-size:12px;white-space:nowrap;box-shadow:3px 3px 0 var(--ink)}
-.timer-actions .secondary{padding:8px 12px;font-size:12px}
-#timer-error{margin:10px 0 0;color:#a43b48;line-height:1.5}
-#timer-error:empty{display:none}
-.timer[data-mode=rest] #timer-display{color:#367f77}
-.timer[data-mode=rest] .timer-modes button[aria-pressed=true]{background:#d9ead4;color:#375c46}
-.timer[data-mode=rest] #timer-progress::-webkit-progress-value{background:#367f77}
-.timer[data-status=finished]{box-shadow:5px 5px 0 #8ba886}
-.timer[data-mode=stopwatch] #timer-display{font-size:40px;color:#367f77;letter-spacing:1px}
-.timer[data-mode=stopwatch] .timer-modes button[aria-pressed=true]{background:#d9ead4;color:#375c46}
-#stopwatch-hint{font-size:11px;color:var(--muted);margin:0 0 15px}
-@media screen and (max-width:1100px){.timer{grid-template-columns:minmax(0,1fr) 120px minmax(0,.9fr) minmax(0,1.1fr);gap:12px;padding:16px 20px}.timer-art.pixel-scene{width:120px}.timer-art .pixel-clock{left:22px}.timer-art .star-one{left:0}.timer-art .star-two{right:0}.timer-art .scene-caption{font-size:8px;letter-spacing:0}.timer-clock{padding:0 12px}#timer-display{font-size:44px}.timer[data-mode=stopwatch] #timer-display{font-size:32px}.timer-actions{gap:8px}.timer-actions .primary,.timer-actions .secondary{padding:8px;font-size:11px}.timer-modes button{padding:5px 6px;font-size:11px}}
-@media screen and (max-width:740px){.timer{grid-template-columns:1fr 120px}.timer-clock{grid-column:1/-1;border:0;padding:10px 0}#timer-display{font-size:44px}.timer-controls{grid-column:1/-1;max-width:none;display:flex;align-items:center;flex-wrap:wrap;gap:12px;justify-self:stretch}.timer-duration{margin:0;flex:1}.timer-actions{flex:1}#timer-error{width:100%;margin:0}.timer-info .eyebrow{font-size:9px}}
-@media print{.timer{display:none!important}}
+
+
+
 
 /* Readable pixel typography: full-size body text, stronger labels and contrast. */
 .icon-defs{position:absolute;width:0;height:0;overflow:hidden}
@@ -164,13 +119,8 @@
 .help-menu p{margin:10px 0 0}
 .icon-button{display:flex;align-items:center;justify-content:center;min-width:46px;min-height:46px}
 .flow-view-switch button{display:flex;align-items:center;justify-content:center;min-width:50px;min-height:44px;padding:8px 12px}
-.export-actions .secondary{display:flex;align-items:center;gap:8px}.export-actions .icon{width:20px;height:20px}
-#stopwatch-hint{display:none!important}
-.timer-modes{width:fit-content;max-width:none}.timer-modes button{display:flex;align-items:center;justify-content:center;min-width:50px;min-height:44px;padding:8px 12px}
-.timer-actions .primary{flex:0 0 64px}.timer-actions{justify-content:flex-end}.timer-controls{max-width:210px}
-.timer-art.pixel-scene{height:110px}.timer-art .pixel-clock{top:12px}.timer-art .star-one{top:5px}.timer-art .star-two{top:58px}
-#timer-progress{margin-top:10px}.share{min-width:52px!important}
-@media screen and (min-width:1101px){.timer{padding-top:12px;padding-bottom:12px}}
+.export-actions .secondary{display:flex;align-items:center;gap:8px}.export-actions .icon{width:20px;height:20px}.share{min-width:52px!important}
+
 @media print{.header-tools,.help-menu,.icon-defs{display:none!important}}
 .flow-view-switch{display:flex;width:fit-content;border:2px solid var(--ink);margin:0 0 18px;max-width:100%}
 .flow-view-switch button{border:0;border-radius:0;background:#f5f0e7;color:#5e5568;padding:8px 16px;font-size:15px}
@@ -229,30 +179,12 @@
   .stale{font-size:14px;line-height:1.75;color:#755022;padding:12px 14px}
   .plan-empty h3{font-size:20px}.plan-empty p{font-size:16px;line-height:1.8}.plan-empty>span{font-size:14px;color:var(--muted)}
   footer{font-size:13px;color:var(--muted)}#toast{font-size:15px;line-height:1.6}
-  .timer-info h2{font-size:24px;margin-bottom:15px}
-  .timer-modes{max-width:none}.timer-modes button{font-size:16px;padding:8px 9px;color:var(--muted)}
-  #timer-display{font-size:64px;font-weight:400;letter-spacing:1px}
-  .timer[data-mode=stopwatch] #timer-display{font-size:48px}
-  #timer-status{font-size:14px;line-height:1.6;margin:8px 0 12px}
-  .timer-duration{font-size:14px;color:var(--muted)}#timer-minutes{font-size:18px;width:80px}
-  .timer-actions .primary,.timer-actions .secondary{font-size:16px;padding:11px 13px;font-weight:400}
-  #stopwatch-hint{font-size:14px;color:var(--muted);line-height:1.7}
-  .timer-art .scene-caption{font-size:12px;letter-spacing:0;color:var(--muted)}
 }
 @media screen and (max-width:1100px){
-  .timer{grid-template-columns:minmax(0,1fr) 150px minmax(0,1fr);gap:16px;padding:18px 20px}
-  .timer-art.pixel-scene{width:150px}.timer-art .pixel-clock{left:37px}
-  .timer-controls{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:18px;max-width:none;border-top:1px dashed var(--line);padding-top:16px}
-  .timer-duration{flex:1;margin:0;max-width:280px}.timer-actions{flex:1;max-width:360px;margin-left:auto}
-  #stopwatch-hint{flex:1;margin:0}#timer-error{width:100%;margin:0}
   .metrics strong{font-size:24px}.plan-heading h2{font-size:22px}
   .timeline-row{grid-template-columns:100px 1fr;gap:10px}
 }
 @media screen and (max-width:740px){
-  .timer{grid-template-columns:minmax(0,1fr) 120px}.timer-art.pixel-scene{width:120px}.timer-art .pixel-clock{left:22px}
-  .timer-clock{grid-column:1/-1}.timer-info .eyebrow{font-size:12px}
-  .timer-modes button{font-size:14px;padding:8px 6px}
-  .timer-controls{display:block}.timer-duration{max-width:none;margin-bottom:14px}.timer-actions{max-width:none}#stopwatch-hint{margin-bottom:14px}
   .brand small{font-size:13px}.local-badge{font-size:12px}.metrics strong{font-size:24px}
   .timeline-row{grid-template-columns:98px 1fr}
 }
@@ -279,11 +211,6 @@
 .allocation-segment:hover:after,.allocation-segment:focus-visible:after{content:attr(data-label);position:absolute;left:0;bottom:calc(100% + 8px);background:#fffdf4;color:#39324b;border:2px solid #39324b;box-shadow:3px 3px 0 #c2b5ce;padding:6px 10px;font-size:14px;line-height:1.6;width:max-content;max-width:min(320px,70vw);white-space:normal;overflow-wrap:anywhere;z-index:10;pointer-events:none}
 .allocation-segment:last-child:after{left:auto;right:0}
 @media print{#allocation-bar{height:24px}.allocation-segment:after{display:none!important}}
-
-.timer[data-mode=rest] .timer-art .pixel-clock,.timer[data-mode=rest] .timer-art .scene-star{display:none}
-.hourglass-art{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:86px;height:104px;shape-rendering:geometricPrecision}
-.timer[data-mode=focus] .timer-art .pixel-clock{display:none}
-.timer[data-mode=stopwatch] .hourglass-art{display:none}
 #sand-stream{animation:sand-fall .45s linear infinite}
 @keyframes sand-fall{to{stroke-dashoffset:-7}}
 @media(prefers-reduced-motion:reduce){#sand-stream{animation:none}}
@@ -310,23 +237,9 @@ label.block{cursor:pointer;color:var(--ink)}
 @media screen{label.block input[type=checkbox]{width:24px;height:24px}label.block:hover{border-color:#7560b2}label.block:focus-within{outline:2px solid #367f77;outline-offset:2px}}
 @media screen and (max-width:1100px){.metrics.has-fixed{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 0}.metrics.has-fixed>div:nth-child(3){padding-left:0}.metrics.has-fixed>div:nth-child(2){border:0}}
 
-/* Equal side columns keep the time display at the center of the whole card. */
-@media screen and (min-width:741px){
-  .timer{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:12px 20px}
-  .timer>div{min-width:0;width:100%;grid-column:auto}
-  .timer-left{display:grid;grid-template-columns:minmax(150px,1fr) minmax(76px,1fr);align-items:center;gap:8px}
-  .timer-info{text-align:center}.timer-modes{margin-inline:auto}
-  .timer-art.pixel-scene{width:100%;height:110px}
-  .timer-art .pixel-clock{left:calc(50% - 38px)}
-  .timer-art .star-one{left:calc(50% - 55px)}.timer-art .star-two{right:calc(50% - 55px)}
-  .timer-clock{padding:0 12px}
-  #timer-display{font-size:clamp(40px,5vw,64px)}
-  .timer[data-mode=stopwatch] #timer-display{font-size:clamp(28px,3.7vw,48px)}
-  .timer-controls{display:block;max-width:none;justify-self:stretch;border-top:0;padding-top:0}
-  .timer-duration{justify-content:center;max-width:none;margin:0 0 13px}
-  .timer-actions{justify-content:center;max-width:none;margin:0;gap:12px}
-}
-@media screen and (max-width:740px){.timer-left{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 120px;align-items:center}}
+
+
+
 
 .history{margin-top:28px}.history-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .history-heading h2{font-size:24px}.history-layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:28px;margin-top:20px}

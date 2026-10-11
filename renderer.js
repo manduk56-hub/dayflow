@@ -477,124 +477,6 @@ $('history-month').addEventListener('change',()=>{const value=$('history-month')
 $('history-today').addEventListener('click',()=>{historyDate=DayflowHistory.dateKey();historyMonth=historyDate.slice(0,7);renderHistory();});
 renderTasks();update(true);renderPlan();
 
-// The timer runs independently of the schedule and stores only local state.
-let timerMode='focus', countdown=new DayflowTimer.Countdown(state.settings.focus*60), stopwatch=new DayflowTimer.Stopwatch();
-try {
-  const saved=JSON.parse(localState.getItem('dayflow-timer-v1'));
-  if(saved && ['focus','rest','stopwatch'].includes(saved.mode) && Number.isInteger(saved.minutes) && saved.minutes>=1 && saved.minutes<=180) {
-    timerMode=saved.mode;
-    countdown=new DayflowTimer.Countdown(saved.minutes*60,saved.timer);
-    stopwatch=new DayflowTimer.Stopwatch(saved.stopwatch);
-  }
-} catch {}
-function saveTimer() {
-  try { localState.setItem('dayflow-timer-v1',JSON.stringify({mode:timerMode,minutes:countdown.durationSeconds/60,timer:countdown.snapshot(),stopwatch:stopwatch.snapshot()})); }
-  catch { toast('타이머 저장에 실패했어요.'); }
-}
-function activeTimer() { return timerMode==='stopwatch'?stopwatch:countdown; }
-function renderStopwatchHands() {
-  // Use the stopwatch's elapsed milliseconds so pause, resume and restore
-  // stay in sync with the display, even after the window was in the background.
-  const seconds=stopwatch.elapsedMs/1000;
-  $('stopwatch-second').style.transform=`rotate(${(seconds%60)*6}deg)`;
-  $('stopwatch-minute').style.transform=`rotate(${(seconds%3600)/10}deg)`;
-  $('stopwatch-hour').style.transform=`rotate(${(seconds%43200)/120}deg)`;
-}
-function renderTimer() {
-  const active=activeTimer(),isStopwatch=timerMode==='stopwatch',running=active.status==='running';
-  const seconds=isStopwatch?stopwatch.secondsElapsed:countdown.secondsLeft;
-  const pad=value=>String(value).padStart(2,'0');
-  $('timer-display').textContent=isStopwatch?`${pad(Math.floor(seconds/3600))}:${pad(Math.floor(seconds/60)%60)}:${pad(seconds%60)}`:`${pad(Math.floor(seconds/60))}:${pad(seconds%60)}`;
-  $('timer-display').setAttribute('aria-label',isStopwatch?'경과 시간':'남은 시간');
-  $('timer-status').textContent={idle:'',running:isStopwatch?'측정 중':timerMode==='focus'?'집중 중':'휴식 중',paused:'일시정지',finished:'완료'}[active.status];
-  $('timer-status').hidden=active.status==='idle';
-  setIconButton($('timer-toggle'),active.status==='running'?'pause':'play',{idle:'시작',running:'일시정지',paused:'계속하기',finished:'다시 시작'}[active.status]);
-  $('timer-title').textContent={focus:'집중',rest:'휴식',stopwatch:'스톱워치'}[timerMode];
-  document.querySelector('.timer').dataset.mode=timerMode;
-  document.querySelector('.timer').dataset.status=active.status;
-  if(isStopwatch)renderStopwatchHands();
-  $('timer-duration').hidden=isStopwatch;
-  $('stopwatch-hint').hidden=!isStopwatch;
-  $('timer-progress').hidden=isStopwatch;
-  const elapsed=Math.max(0,Math.min(1,1-countdown.remainingMs/(countdown.durationSeconds*1000)));
-  $('timer-progress').value=elapsed*100;
-  // The two bulbs have equal areas. Convert elapsed time to sand volume,
-  // then solve the tapered neck so the amount of sand moves at a steady rate.
-  const remainingArea=(1-elapsed)*1236;
-  const sandLevel=remainingArea>=468?38-(remainingArea-468)/48:56-(-4+Math.sqrt(16+4*(11/9)*remainingArea))/(2*(11/9));
-  $('sand-upper').setAttribute('y',sandLevel);
-  $('sand-upper').setAttribute('height',56-sandLevel);
-  $('sand-lower').setAttribute('y',120-sandLevel);
-  $('sand-lower').setAttribute('height',sandLevel-22);
-  $('sand-stream').setAttribute('d',`M50 56V${120-sandLevel}`);
-  $('sand-stream').toggleAttribute('hidden',isStopwatch||!running||elapsed>=1);
-  for(const mode of ['focus','rest','stopwatch']) {
-    $(`timer-${mode}`).setAttribute('aria-pressed',String(mode===timerMode));
-    $(`timer-${mode}`).disabled=running;
-  }
-  $('timer-minutes').disabled=running;
-}
-function setTimerMinutes(value) {
-  const minutes=Number(value);
-  if(!Number.isInteger(minutes) || minutes<1 || minutes>180) {
-    $('timer-error').textContent='1~180분 사이의 정수를 입력해주세요.';
-    return false;
-  }
-  countdown.setDuration(minutes*60);
-  $('timer-error').textContent='';
-  saveTimer();renderTimer();return true;
-}
-for(const mode of ['focus','rest','stopwatch']) $(`timer-${mode}`).addEventListener('click',()=>{
-  if(activeTimer().status==='running' || timerMode===mode)return;
-  timerMode=mode;
-  $('timer-error').textContent='';
-  if(mode==='stopwatch') {saveTimer();renderTimer();return;}
-  const minutes=mode==='focus'?state.settings.focus:(state.settings.rest || 5);
-  $('timer-minutes').value=minutes;setTimerMinutes(minutes);
-});
-$('timer-minutes').value=countdown.durationSeconds/60;
-$('timer-minutes').addEventListener('change',()=>setTimerMinutes($('timer-minutes').value));
-$('timer-toggle').addEventListener('click',()=>{
-  const active=activeTimer();
-  if(active.status==='running')active.pause();
-  else if(timerMode==='stopwatch')stopwatch.start();
-  else {
-    // Validate the visible value even if the user has not blurred the input yet.
-    const value=Number($('timer-minutes').value);
-    if(!Number.isInteger(value) || value<1 || value>180) { $('timer-error').textContent='1~180분 사이의 정수를 입력해주세요.';return; }
-    if(value*60!==countdown.durationSeconds && !setTimerMinutes(value))return;
-    if(alarmSound)prepareAlarmAudio().catch(()=>toast('알림 소리를 켜지 못했어요. PC 소리 설정을 확인해주세요.'));
-    countdown.start();
-  }
-  saveTimer();renderTimer();
-});
-let hourglassFlip=null;
-$('timer-reset').addEventListener('click',()=>{
-  activeTimer().reset();$('timer-minutes').value=countdown.durationSeconds/60;$('timer-error').textContent='';saveTimer();renderTimer();
-  hourglassFlip?.cancel();
-  if(timerMode!=='stopwatch' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    // The refilled sand starts at the bottom and is carried to the top by a half turn.
-    hourglassFlip=document.querySelector('.hourglass-art').animate([
-      {transform:'translate(-50%,-50%) rotate(-180deg) scale(1)'},
-      {transform:'translate(-50%,-50%) rotate(-90deg) scale(.9)',offset:.5},
-      {transform:'translate(-50%,-50%) rotate(0deg) scale(1)'}
-    ],{duration:650,easing:'cubic-bezier(.22,.75,.25,1)'});
-  }
-});
-setInterval(()=>{
-  if(activeTimer().tick()) {saveTimer();playAlarmSound();toast(timerMode==='focus'?'집중 시간이 끝났어요. 잠깐 쉬어가세요.':'휴식 시간이 끝났어요. 다시 시작해볼까요?');}
-  renderTimer();
-},250);
-renderTimer();
-function animateStopwatchHands() {
-  if(timerMode==='stopwatch' && stopwatch.status==='running') {
-    stopwatch.tick();
-    renderStopwatchHands();
-  }
-  requestAnimationFrame(animateStopwatchHands);
-}
-requestAnimationFrame(animateStopwatchHands);
-
 function saveAlarm(){
   try{localState.setItem('dayflow-alarm-v1',JSON.stringify({alarm:scheduleAlarm.snapshot(),source:alarmSource,sound:alarmSound}));lastAlarmSaved=Date.now();}
   catch{toast('일정 알람 상태를 저장하지 못했어요.');}
@@ -649,7 +531,6 @@ $('alarm-toggle').addEventListener('click',()=>{
     else{
       if(!plan||builtFrom!==signature())return;
       scheduleAlarm.start(plan.rows);alarmSource=builtFrom;
-      if(activeTimer().status==='running'){activeTimer().pause();saveTimer();renderTimer();}
     }
   }
   saveAlarm();renderScheduleAlarm();
@@ -661,5 +542,5 @@ setInterval(()=>{
   notifyAlarm(scheduleAlarm.tick());renderScheduleAlarm();
   if(scheduleAlarm.status==='running'&&Date.now()-lastAlarmSaved>=5000)saveAlarm();
 },250);
-window.addEventListener('beforeunload',()=>{save();saveTimer();scheduleAlarm.tick();saveAlarm();});
+window.addEventListener('beforeunload',()=>{save();scheduleAlarm.tick();saveAlarm();});
 renderScheduleAlarm();
