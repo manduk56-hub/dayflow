@@ -320,9 +320,9 @@ header{display:grid;grid-template-columns:auto 1fr auto;gap:24px}
 @media screen and (max-width:740px){header{grid-template-columns:1fr auto;gap:12px}.header-brand{grid-column:1/-1}.header-tools{justify-self:start}.main-tabs{justify-self:end}.main-tabs button{padding:8px 24px}.goal-date-bar{flex-wrap:wrap}.goal-date-bar p{flex-basis:100%}}
 @media print{.goal-date-bar{display:none!important}}
 .schedule-column{display:grid;gap:24px;min-width:0}
-.schedule-alarm{display:grid;grid-template-columns:minmax(0,1fr) 140px;align-items:center;gap:12px 20px;margin:0;padding:18px 20px}
+.schedule-alarm{display:grid;grid-template-columns:minmax(0,1fr) 240px;align-items:center;gap:12px 20px;margin:0;padding:18px 20px}
 .alarm-info h2{font-size:20px}.alarm-info p{margin:6px 0 0;font-size:14px}.alarm-info .helper{font-size:12px}
-#alarm-display{font-size:44px;color:var(--theme-accent-dark);text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+#alarm-display{font-size:64px;line-height:1.2;color:var(--theme-accent-dark);text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
 .alarm-actions{grid-column:1 / -1;display:flex;justify-content:flex-start;align-items:center;gap:8px;flex-wrap:wrap}.alarm-actions .primary{width:auto;justify-content:center;padding:8px 12px;font-size:14px;box-shadow:3px 3px 0 var(--ink)}
 .alarm-actions button{display:inline-flex;align-items:center;justify-content:center;height:44px;margin:0;padding:8px 12px;font-size:14px;line-height:1;white-space:nowrap;box-shadow:3px 3px 0 var(--ink)}
 .alarm-actions .alarm-sound{height:44px;margin:0;white-space:nowrap}
@@ -330,7 +330,7 @@ header{display:grid;grid-template-columns:auto 1fr auto;gap:24px}
 .alarm-note{grid-column:1/-1;margin:0;padding-top:8px;border-top:1px dashed var(--line)}
 .schedule-alarm[data-kind=break] #alarm-display{color:var(--theme-teal)}
 .timeline-row.alarm-active .block{outline:3px solid var(--theme-teal);outline-offset:2px}
-@media screen and (max-width:740px){.schedule-alarm{grid-template-columns:minmax(0,1fr) 140px}.alarm-actions{grid-column:1/-1;justify-content:flex-start}#alarm-display{font-size:36px}}
+@media screen and (max-width:740px){.schedule-alarm{grid-template-columns:minmax(0,1fr) 210px}.alarm-actions{grid-column:1/-1;justify-content:flex-start}#alarm-display{font-size:52px}}
 @media print{.schedule-alarm{display:none!important}.timeline-row.alarm-active .block{outline:0}}
 
 .brand .brand-mark{width:52px;height:52px;background:transparent;border:0;box-shadow:none;padding:0}
