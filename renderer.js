@@ -285,13 +285,14 @@ function renderPlan() {
     bar.style.width=`${minutes/plan.total*100}%`;bar.style.background=color;
     if(isBreak)bar.classList.add('allocation-break');
     bar.dataset.label=label;bar.tabIndex=0;bar.setAttribute('aria-label',label);
-    bar.append(el('span','allocation-label',name));$('allocation-bar').append(bar);
+    const barLabel=el('span','allocation-label',name);
+    bar.append(barLabel);$('allocation-bar').append(bar);
     const legend=el('span'),dot=el('i','dot');dot.style.background=color;
     legend.append(dot,document.createTextNode(`${name} ${minutes}분`));$('allocation-legend').append(legend);
   }
   plan.allocations.forEach((t,i)=>{if(t.minutes)allocationSegment(t.name,t.minutes,colors[i%6]);});
-  if(plan.breakTime)allocationSegment('휴식',plan.breakTime,'#c7cebb',true);
-  if(plan.idleTime)allocationSegment('빈 시간',plan.idleTime,'#e6e1d7',true);
+  if(plan.breakTime)allocationSegment('휴식',plan.breakTime,DayflowPalette.current.variables['--theme-break'],true);
+  if(plan.idleTime)allocationSegment('빈 시간',plan.idleTime,DayflowPalette.current.variables['--theme-idle'],true);
   $('timeline').replaceChildren();
   plan.rows.forEach((r,i)=>{
     const row=el('div',`timeline-row ${r.type==='break'||r.type==='idle'?'break':''} ${r.kind==='fixed'?'fixed-row':''} ${done.includes(i)?'done':''}`), time=el('div','time-label',Scheduler.formatTime(r.start));time.append(el('small',``, `— ${Scheduler.formatTime(r.end)}`));
@@ -325,16 +326,16 @@ function renderFlowView() {
 function renderCircle() {
   if(!plan)return;
   const chart=$('day-circle');chart.replaceChildren();
-  chart.append(svgNode('circle',{cx:220,cy:220,r:150,fill:'#e6e1d7'}));
+  chart.append(svgNode('circle',{cx:220,cy:220,r:150,fill:DayflowPalette.current.variables['--theme-idle']}));
   for(let hour=0;hour<24;hour++){
     const major=hour%3===0,a=DayflowCircle.point(hour*60,major?162:166),b=DayflowCircle.point(hour*60,174);
-    chart.append(svgNode('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:major?'#5e5568':'#b4a9b9','stroke-width':major?2:1}));
+    chart.append(svgNode('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:major?DayflowPalette.current.variables['--theme-muted']:DayflowPalette.current.variables['--theme-line'],'stroke-width':major?2:1}));
     if(major){const p=DayflowCircle.point(hour*60,195);chart.append(svgNode('text',{x:p[0],y:p[1],'text-anchor':'middle','dominant-baseline':'middle',class:'circle-hour'},`${hour}시`));}
   }
   $('circle-row').replaceChildren();
   plan.rows.forEach((r,i)=>{
     const label=`${Scheduler.formatTime(r.start)} ~ ${Scheduler.formatTime(r.end)} · ${r.name} · ${r.duration}분`;
-    const path=svgNode('path',{d:DayflowCircle.sectorPath(r.start,r.end),fill:r.type==='break'?'#c7cebb':r.type==='idle'?'#e6e1d7':colors[r.color],class:'circle-sector',tabindex:0,role:'button','aria-label':label,'data-row':i});
+    const path=svgNode('path',{d:DayflowCircle.sectorPath(r.start,r.end),fill:r.type==='break'?DayflowPalette.current.variables['--theme-break']:r.type==='idle'?DayflowPalette.current.variables['--theme-idle']:colors[r.color],class:'circle-sector',tabindex:0,role:'button','aria-label':label,'data-row':i});
     path.append(svgNode('title',{},label));
     path.addEventListener('click',()=>{selectedCircleRow=i;renderCircleSelection();});
     path.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectedCircleRow=i;renderCircleSelection();}});
@@ -411,6 +412,9 @@ $('generate').addEventListener('click',()=>{try{plan=Scheduler.createSchedule(st
 function csvCell(v) {let text=String(v);if(/^[=+@\-\t\r\n]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';}
 function planImageHTML(){
   const source=document.querySelector('.plan'),copy=source.cloneNode(true);
+  for(const [key,value]of Object.entries(DayflowPalette.current.variables))copy.style.setProperty(key,value);
+  const paletteStyle=getComputedStyle(document.documentElement);
+  for(const key of ['--bg','--paper','--ink','--muted','--green','--line','--shadow','--c0','--c1','--c2','--c3','--c4','--c5'])copy.style.setProperty(key,paletteStyle.getPropertyValue(key));
   // Checked is a live property; carry it into the serialized snapshot as well.
   source.querySelectorAll('input[type=checkbox]').forEach((input,index)=>copy.querySelectorAll('input[type=checkbox]')[index].toggleAttribute('checked',input.checked));
   copy.querySelectorAll('.export-actions,.flow-view-switch,.circle-details,.stale').forEach(node=>node.remove());
@@ -544,3 +548,5 @@ setInterval(()=>{
 },250);
 window.addEventListener('beforeunload',()=>{save();scheduleAlarm.tick();saveAlarm();});
 renderScheduleAlarm();
+
+DayflowPalette.initialize(localState,palette=>{colors.splice(0,colors.length,...palette.colors);renderTasks();renderPlan();renderHistory();renderScheduleAlarm();});

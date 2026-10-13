@@ -16,15 +16,10 @@
     <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M4 5h16v16H4ZM4 10h16M8 2v6m8-6v6"/></symbol>
     <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 1 1 4 3l-1 1v3m0 3v1"/></symbol>
   </defs></svg>
-  <header><div class="header-brand"><div class="brand"><span class="brand-mark" aria-label="Dayflow d."><img src="assets/icon/dayflow-d-64.png" alt=""></span><span>dayflow</span></div><details class="help-menu"><summary title="도움말" aria-label="도움말"><svg class="icon" aria-hidden="true"><use href="#icon-help"/></svg></summary><div><strong>사용 방법</strong><p>시간과 할 일을 입력하고 비중을 조절한 뒤 일정을 만드세요.</p><p>비중은 시간 투자 비율이에요. 0은 제외되며 목록 순서로 진행해요.</p><p>휴식도 전체 시간에 포함돼요. 집중 기준의 ±20% 안에서 작업 경계에 휴식을 맞춰요.</p><p>종료가 시작보다 이르면 다음 날이에요. 데이터는 이 컴퓨터에만 저장돼요.</p></div></details></div><div class="header-tools"><div class="header-date-info" role="status"><span id="header-date-label">목표 날짜</span><time id="header-date"></time></div></div><nav class="main-tabs" role="tablist" aria-label="주요 화면"><button id="tab-goals" type="button" role="tab" aria-selected="true" aria-controls="goals-panel">목표</button><button id="tab-calendar" type="button" role="tab" aria-selected="false" aria-controls="history" tabindex="-1">달력</button></nav></header>
-  <main>
+  <header><div class="header-brand"><div class="brand"><span class="brand-mark" aria-label="Dayflow d."><img src="assets/icon/dayflow-d-64.png" alt=""></span><span>dayflow</span></div><details class="help-menu"><summary title="도움말" aria-label="도움말"><svg class="icon" aria-hidden="true"><use href="#icon-help"/></svg></summary><div><strong>사용 방법</strong><p>시간과 할 일을 입력하고 비중을 조절한 뒤 일정을 만드세요.</p><p>비중은 시간 투자 비율이에요. 0은 제외되며 목록 순서로 진행해요.</p><p>휴식도 전체 시간에 포함돼요. 집중 기준의 ±20% 안에서 작업 경계에 휴식을 맞춰요.</p><p>종료가 시작보다 이르면 다음 날이에요. 데이터는 이 컴퓨터에만 저장돼요.</p></div></details><details id="palette-menu" class="palette-menu"><summary aria-label="색 팔레트 선택"><span aria-hidden="true">◧</span><span id="palette-current">라벤더 크림</span></summary><div id="palette-options" class="palette-options"><p>원하는 색 조합을 선택하세요.</p><p id="palette-error" role="alert"></p></div></details></div><div class="header-tools"><div class="header-date-info" role="status"><span id="header-date-label">목표 날짜</span><time id="header-date"></time></div></div><nav class="main-tabs" role="tablist" aria-label="주요 화면"><button id="tab-goals" type="button" role="tab" aria-selected="true" aria-controls="goals-panel">목표</button><button id="tab-calendar" type="button" role="tab" aria-selected="false" aria-controls="history" tabindex="-1">달력</button></nav></header>
+  <main id="dayflow-content">
     <div id="goals-panel" role="tabpanel" aria-labelledby="tab-goals">
-    <section class="schedule-alarm card" aria-labelledby="alarm-title">
-      <div class="alarm-info"><h2 id="alarm-title">일정 알람</h2><p id="alarm-current" role="status">목표와 휴식을 순서대로 진행해요.</p><p id="alarm-next" class="helper"></p></div>
-      <span id="alarm-display" role="timer" aria-label="현재 구간 남은 시간">00:00</span>
-      <div class="alarm-actions"><button id="alarm-toggle" type="button" class="primary">일정 알람 시작</button><button id="alarm-stop" type="button" class="secondary" disabled>중지</button><label class="alarm-sound"><input id="alarm-sound" type="checkbox" checked> 알림 소리</label><button id="alarm-test-sound" type="button" class="secondary">소리 테스트</button></div>
-      <p class="helper alarm-note">시작을 누른 시점부터 각 구간 길이대로 진행해요. 실행 중 일정 수정은 다음 시작에 반영돼요. 앱을 닫으면 알림은 멈추며 다시 열면 일시정지 상태로 복원돼요. 작업 완료 체크는 직접 해주세요.</p>
-    </section>
+
     <div class="workspace">
       <aside class="editor">
         <section class="card"><div class="section-heading"><h2>시간</h2></div>
@@ -32,6 +27,7 @@
           <p id="window-note" class="helper"></p>
           <div class="rhythm"><label title="작업 경계에 맞춰 집중 기준의 ±20% 안에서 조정됩니다">집중<select id="focus"><option value="25">25분</option><option value="40">40분</option><option value="50" selected>50분</option><option value="60">60분</option><option value="90">90분</option></select></label><label title="휴식도 전체 시간에 포함됩니다">휴식<select id="rest"><option value="0">없음</option><option value="5">5분</option><option value="10" selected>10분</option><option value="15">15분</option><option value="20">20분</option></select></label></div>
         </section>
+        <div class="editor-body">
         <section class="card"><div class="section-heading"><h2 title="비중은 시간 투자 비율입니다.">할 일</h2><span id="task-count" class="count"></span></div>
           <label class="allocation-unit-setting">비중 배정 단위<select id="allocation-unit" aria-label="비중 배정 시간 단위"><option value="1">1분 단위</option><option value="5">5분 단위</option><option value="10">10분 단위</option></select></label>
           <p class="helper allocation-unit-note">남는 분은 마지막 비중 작업에 더해요.</p>
@@ -45,7 +41,15 @@
           <div id="fixed-list"></div><div id="empty-fixed" class="empty-tasks">＋ 고정 시간 항목을 추가하세요</div>
         </section>
         <button id="generate" class="primary">일정 만들기 <span>↗</span></button><p id="error" role="alert"></p>
+        </div>
       </aside>
+      <div class="schedule-column">
+    <section class="schedule-alarm card" aria-labelledby="alarm-title">
+      <div class="alarm-info"><h2 id="alarm-title">일정 알람</h2><p id="alarm-current" role="status">목표와 휴식을 순서대로 진행해요.</p><p id="alarm-next" class="helper"></p></div>
+      <span id="alarm-display" role="timer" aria-label="현재 구간 남은 시간">00:00</span>
+      <div class="alarm-actions"><button id="alarm-toggle" type="button" class="primary">일정 알람 시작</button><button id="alarm-stop" type="button" class="secondary" disabled>중지</button><label class="alarm-sound"><input id="alarm-sound" type="checkbox" checked> 알림 소리</label><button id="alarm-test-sound" type="button" class="secondary">소리 테스트</button></div>
+      <p class="helper alarm-note">시작을 누른 시점부터 각 구간 길이대로 진행해요. 실행 중 일정 수정은 다음 시작에 반영돼요. 앱을 닫으면 알림은 멈추며 다시 열면 일시정지 상태로 복원돼요. 작업 완료 체크는 직접 해주세요.</p>
+    </section>
       <section class="plan card"><div class="plan-heading"><h2 id="plan-heading-title">일정</h2><span id="plan-status" class="status" hidden></span></div>
         <div id="stale" class="stale" hidden>설정이 바뀌었어요. ‘내 하루 일정 만들기’를 눌러 반영하세요.</div>
         <div id="plan-empty" class="plan-empty"><div class="empty-symbol">◷</div><p>할 일을 추가하고 일정을 만드세요.</p></div>
@@ -55,6 +59,7 @@
           <div id="circle-view" hidden><svg id="day-circle" viewBox="0 0 440 440" role="group" aria-label="24시간 원형 하루일과표" title="위쪽 0시부터 시계 방향으로 24시간을 표시합니다. 구간을 선택하면 상세 시간을 확인할 수 있습니다."></svg><div class="circle-key"><i></i> 미배정</div><div class="circle-details"><label class="sr-only" for="circle-row">구간 선택</label><select id="circle-row"></select><div class="circle-selection"><div><strong id="circle-task"></strong><p id="circle-time"></p></div><button id="circle-done" class="secondary icon-button" type="button" title="완료로 표시" aria-label="완료로 표시"><svg class="icon" aria-hidden="true"><use href="#icon-check"/></svg></button></div></div></div>
           <p id="allocation-note" class="helper" hidden></p><div class="export-actions"><button id="copy-image" class="secondary" type="button" title="전체 일정표를 이미지로 복사" aria-label="전체 일정표를 이미지로 복사">이미지 복사</button><button id="pdf" class="secondary" title="PDF 저장" aria-label="PDF 저장"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>PDF</button><button id="csv" class="secondary" title="CSV 저장" aria-label="CSV 저장"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>CSV</button></div></div>
       </section>
+      </div>
     </div>
     </div>
     <section id="history" class="history card" role="tabpanel" aria-labelledby="tab-calendar" hidden>
@@ -69,5 +74,5 @@
       </div><div class="history-day-panel"><h3 id="history-date"></h3><button id="edit-history-date" class="primary calendar-edit" type="button">목표·일정 편집</button><p id="history-summary" class="helper"></p><div id="history-completed"></div><details id="history-plan"><summary>그날의 마지막 일정</summary><div id="history-timeline"></div></details><p class="helper">완료 시간은 체크한 구간의 배정 시간 기준이에요.</p></div></div>
     </section>
   </main>
-  <div id="toast" role="status" hidden></div><script src="scheduler.js"></script><script src="circle.js"></script><script src="history.js"></script><script src="alarm.js"></script><script src="planner.js"></script><script src="time-picker.js"></script><script src="month-picker.js"></script><script src="renderer.js"></script>
+  <div id="toast" role="status" hidden></div><script src="scheduler.js"></script><script src="circle.js"></script><script src="history.js"></script><script src="alarm.js"></script><script src="planner.js"></script><script src="time-picker.js"></script><script src="month-picker.js"></script><script src="palette.js"></script><script src="renderer.js"></script><script src="page-scrollbar.js"></script>
 </body></html>
