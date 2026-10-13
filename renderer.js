@@ -34,6 +34,8 @@ try{const saved=JSON.parse(localState.getItem('dayflow-alarm-v1'));if(saved){sch
 try{historyRecords=DayflowHistory.readRecords(localState.getItem('dayflow-history-v1'));}catch{historyReady=false;}
 let savedItems=[];
 try{const items=JSON.parse(localState.getItem('dayflow-saved-items-v1'));if(Array.isArray(items))savedItems=items.filter(t=>t.type==='fixed'&&typeof t.name==='string'&&Number.isInteger(t.durationMinutes)&&t.durationMinutes>0&&t.durationMinutes<=1439);}catch{}
+let savedTasks=[];
+try{const items=JSON.parse(localState.getItem('dayflow-saved-tasks-v1'));if(Array.isArray(items))savedTasks=items.filter(t=>t&&typeof t.name==='string'&&(t.type==='duration'?Number.isInteger(t.durationMinutes)&&t.durationMinutes>0&&t.durationMinutes<=1439:(!t.type||t.type==='weighted')&&Number.isInteger(t.weight)&&t.weight>=0&&t.weight<=10));}catch{}
 try { if(localState.getItem('dayflow-view-v1')==='circle')flowView='circle'; } catch {}
 try {
   const last = JSON.parse(localState.getItem('dayflow-v1'));
@@ -270,6 +272,8 @@ function renderTasks() {
       mode.value=task.type==='duration'?'duration':'weighted';
       mode.addEventListener('change',()=>{task.type=mode.value;if(task.type==='duration'&&!Number.isInteger(task.durationMinutes))task.durationMinutes=30;if(task.type==='weighted'&&!Number.isInteger(task.weight))task.weight=3;renderTasks();update();});
       top.append(mode);
+      const remember=el('button','save-item');remember.type='button';setIconButton(remember,'save',`${task.name} 자주 쓰는 할 일로 저장`);
+      remember.addEventListener('click',()=>saveTaskItem(task));top.append(remember);
     }
     top.append(remove);
     if(task.type==='fixed'){
@@ -408,18 +412,33 @@ function addTask(task){
   state.tasks.push({...task,id:crypto.randomUUID()});renderTasks();update();return true;
 }
 function renderSavedItems(){
-  $('saved-items').hidden=!savedItems.length;$('saved-item-select').replaceChildren();
-  savedItems.forEach((item,i)=>{const option=el('option','',`${item.name} · ${item.durationMinutes}분${item.startTime?' · '+item.startTime:''}`);option.value=i;$('saved-item-select').append(option);});
+  for(const [items,selectId,addId,removeId]of [[savedItems,'saved-item-select','add-saved-item','remove-saved-item'],[savedTasks,'saved-task-select','add-saved-task','remove-saved-task']]){
+    const select=$(selectId),selected=select.value;select.replaceChildren();
+    if(!items.length){const option=el('option','','아직 저장한 항목이 없어요');option.value='';select.append(option);}
+    items.forEach((item,i)=>{const detail=item.type==='fixed'?`${item.durationMinutes}분${item.startTime?' · '+item.startTime:''}`:item.type==='duration'?`직접 시간 ${item.durationMinutes}분`:`비중 ${item.weight}`;const option=el('option','',`${item.name} · ${detail}`);option.value=i;select.append(option);});
+    if(items.length)select.value=String(Math.min(Number(selected)||0,items.length-1));
+    select.disabled=$(addId).disabled=$(removeId).disabled=!items.length;
+  }
 }
-function storeSavedItems(){try{localState.setItem('dayflow-saved-items-v1',JSON.stringify(savedItems));}catch{toast('항목 저장에 실패했어요.');}renderSavedItems();}
-function saveFixedItem(task){
-  if(!task.name.trim()||!Number.isInteger(task.durationMinutes)||task.durationMinutes<1||task.durationMinutes>1439){toast('이름과 소요 시간을 먼저 입력해주세요.');return;}
-  const item={type:'fixed',name:task.name.trim(),durationMinutes:task.durationMinutes,startTime:task.startTime||''};
-  const previous=savedItems.findIndex(t=>t.name===item.name);
-  if(previous>=0)savedItems[previous]=item;
-  else{if(savedItems.length>=30){toast('저장한 항목은 최대 30개까지 보관할 수 있어요.');return;}savedItems.push(item);}
-  storeSavedItems();toast(`${item.name} 항목을 저장했어요.`);
+function storeSavedItems(next,isTask=false){
+  try{localState.setItem(isTask?'dayflow-saved-tasks-v1':'dayflow-saved-items-v1',JSON.stringify(next));}
+  catch{toast('항목 저장에 실패했어요.');return false;}
+  if(isTask)savedTasks=next;else savedItems=next;
+  renderSavedItems();return true;
 }
+function saveLibraryItem(task,isTask){
+  if(!task.name.trim()){toast('이름을 먼저 입력해주세요.');return;}
+  const timed=!isTask||task.type==='duration';
+  if(timed&&(!Number.isInteger(task.durationMinutes)||task.durationMinutes<1||task.durationMinutes>1439)){toast('소요 시간은 1~1439분으로 입력해주세요.');return;}
+  if(!timed&&(!Number.isInteger(task.weight)||task.weight<0||task.weight>10)){toast('비중은 0~10으로 입력해주세요.');return;}
+  const item={name:task.name.trim(),type:isTask?(timed?'duration':'weighted'):'fixed',...(timed?{durationMinutes:task.durationMinutes}:{weight:task.weight}),...(!isTask?{startTime:task.startTime||''}:{})};
+  const next=[...(isTask?savedTasks:savedItems)],previous=next.findIndex(t=>t.name===item.name);
+  if(previous>=0)next[previous]=item;
+  else{if(next.length>=30){toast('저장한 항목은 최대 30개까지 보관할 수 있어요.');return;}next.push(item);}
+  if(storeSavedItems(next,isTask)){$(isTask?'saved-tasks':'saved-items').open=true;$(isTask?'saved-task-select':'saved-item-select').value=String(previous>=0?previous:next.length-1);toast(`${item.name} 항목을 저장했어요.`);}
+}
+function saveFixedItem(task){saveLibraryItem(task,false);}
+function saveTaskItem(task){saveLibraryItem(task,true);}
 $('add-form').addEventListener('submit',e=>{
   e.preventDefault();const name=$('new-task').value.trim();if(!name)return;
   if(addTask({name,weight:3})){$('new-task').value='';$('new-task').focus();}
@@ -431,7 +450,9 @@ $('add-fixed-form').addEventListener('submit',e=>{
   if(addTask(task)){$('new-fixed-name').value='';$('new-fixed-start').value='';$('new-fixed-name').focus();}
 });
 $('add-saved-item').addEventListener('click',()=>{const item=savedItems[Number($('saved-item-select').value)];if(item)addTask(item);});
-$('remove-saved-item').addEventListener('click',()=>{const index=Number($('saved-item-select').value);if(savedItems[index]){savedItems.splice(index,1);storeSavedItems();}});
+$('remove-saved-item').addEventListener('click',()=>{const index=Number($('saved-item-select').value);if(savedItems[index])storeSavedItems(savedItems.filter((_,i)=>i!==index));});
+$('add-saved-task').addEventListener('click',()=>{const item=savedTasks[Number($('saved-task-select').value)];if(item)addTask(item);});
+$('remove-saved-task').addEventListener('click',()=>{const index=Number($('saved-task-select').value);if(savedTasks[index])storeSavedItems(savedTasks.filter((_,i)=>i!==index),true);});
 renderSavedItems();
 $('generate').addEventListener('click',()=>{try{plan=Scheduler.createSchedule(state.tasks,state.settings);planVersion=2;builtFrom=signature();done=[];selectedCircleRow=0;save();renderPlan();$('error').textContent='';toast('나만의 하루 일정이 준비됐어요.');}catch(e){$('error').textContent=e.message;}});
 function csvCell(v) {let text=String(v);if(/^[=+@\-\t\r\n]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';}

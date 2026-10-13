@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const keys = new Set(['dayflow-v1', 'dayflow-history-v1', 'dayflow-saved-items-v1', 'dayflow-view-v1', 'dayflow-timer-v1', 'dayflow-alarm-v1', 'dayflow-plans-v1', 'dayflow-palette-v1']);
+const keys = new Set(['dayflow-v1', 'dayflow-history-v1', 'dayflow-saved-items-v1', 'dayflow-saved-tasks-v1', 'dayflow-view-v1', 'dayflow-timer-v1', 'dayflow-alarm-v1', 'dayflow-plans-v1', 'dayflow-palette-v1']);
 
 function createStorage(directory) {
   const file = path.join(directory, 'dayflow-state.json');

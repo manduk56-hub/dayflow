@@ -16,6 +16,7 @@ test('all local data survives reopening the store and later edits', t => {
     'dayflow-v1': JSON.stringify({ tasks: [{ id: 'reading', name: '독서', weight: 4 }], done: [0], settings: { start: '23:00', end: '01:00' } }),
     'dayflow-history-v1': '{"2026-10-11":{}}',
     'dayflow-saved-items-v1': '[{"name":"식사"}]',
+    'dayflow-saved-tasks-v1': '[{"name":"공부","type":"weighted","weight":7}]',
     'dayflow-view-v1': 'circle',
     'dayflow-plans-v1': '{"2026-10-12":{"tasks":[]}}',
     'dayflow-timer-v1': '{"mode":"stopwatch"}',
@@ -27,6 +28,16 @@ test('all local data survives reopening the store and later edits', t => {
   reopened.setItem('dayflow-view-v1', 'list');
   assert.equal(createStorage(directory).getItem('dayflow-view-v1'), 'list');
   assert.equal(createStorage(directory).getItem('dayflow-v1'), values['dayflow-v1']);
+});
+
+test('저장한 할 일의 비중과 직접 시간을 재실행 뒤에도 복원한다', t => {
+  const directory=profile(t),storage=createStorage(directory);
+  const items=[{name:'공부',type:'weighted',weight:7},{name:'독서',type:'duration',durationMinutes:25}];
+  storage.setItem('dayflow-saved-tasks-v1',JSON.stringify(items));
+  const reopened=createStorage(directory);
+  assert.deepEqual(JSON.parse(reopened.getItem('dayflow-saved-tasks-v1')),items);
+  reopened.setItem('dayflow-saved-tasks-v1',JSON.stringify(items.slice(1)));
+  assert.deepEqual(JSON.parse(createStorage(directory).getItem('dayflow-saved-tasks-v1')),items.slice(1));
 });
 test('a damaged saved file is never replaced by defaults', t => {
   const directory = profile(t), file = path.join(directory, 'dayflow-state.json');

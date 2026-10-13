@@ -379,6 +379,12 @@ header{display:grid;grid-template-columns:auto 1fr auto;gap:24px}
 #history-today{background:var(--theme-secondary);color:var(--ink)}
 #history-today:hover,.time-picker-done:hover{background:color-mix(in srgb,var(--theme-secondary) 85%,var(--theme-paper))}
 
+.saved-items{padding:12px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.saved-items h3{font-size:14px;font-weight:400;margin:0;color:var(--theme-accent-dark)}
+.saved-items .helper{font-size:12px;margin-top:8px}
+.saved-item-controls select:disabled,.saved-item-controls button:disabled{opacity:.55;cursor:default}
+.task-top .save-item{flex:0 0 30px;min-width:30px}
+
 /* Share the top row height so tasks and the schedule start together. */
 @media screen and (min-width:741px){
   .workspace{grid-template-rows:auto 1fr;row-gap:18px;align-items:stretch}
@@ -393,3 +399,9 @@ header{display:grid;grid-template-columns:auto 1fr auto;gap:24px}
 .history-linked-plans .secondary{white-space:normal;text-align:left;line-height:1.6}
 .time-label .time-date{color:var(--theme-accent-dark);margin-bottom:3px}
 
+.saved-items>summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;color:var(--theme-accent-dark);font-size:14px}
+.saved-items>summary::-webkit-details-marker{display:none}
+.saved-items>summary::before{content:'▸';flex-shrink:0}
+.saved-items[open]>summary::before{content:'▾'}
+.saved-items>summary h3{font:inherit;color:inherit}
+.saved-items>summary:focus-visible{outline:3px solid var(--theme-teal);outline-offset:4px}
