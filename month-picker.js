@@ -9,7 +9,7 @@
   function attach(input,trigger){
     trigger.addEventListener('click',()=>{
       if(activeTrigger===trigger){close();return;}
-      close();root.DayflowTimePicker.close();activeTrigger=trigger;
+      close();root.DayflowTimePicker.close();root.DayflowDatePicker?.close();activeTrigger=trigger;
       const [selectedYear,selectedMonth]=input.value.split('-').map(Number);let year=selectedYear;
       const dialog=document.createElement('div');popup=dialog;dialog.className='time-picker-popup month-picker-popup';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-label','조회 연도와 월 선택');
       trigger.setAttribute('aria-expanded','true');

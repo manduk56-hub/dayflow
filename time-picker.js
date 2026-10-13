@@ -10,7 +10,7 @@
   function attach(input,trigger,title){
     function open(){
       if(activeInput===input){close();return;}
-      close();activeInput=input;
+      close();root.DayflowMonthPicker?.close();root.DayflowDatePicker?.close();activeInput=input;
       let [hour,minute]=(input.value||'14:00').split(':').map(Number);
       const dialog=document.createElement('div');popup=dialog;
       dialog.className='time-picker-popup';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-label',title);

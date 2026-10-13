@@ -306,6 +306,14 @@ header{display:grid;grid-template-columns:auto 1fr auto;gap:24px}
 .goal-date-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:20px 0 24px}
 .goal-date-bar label{display:flex;align-items:center;gap:12px;flex:0 0 auto;font-size:16px;color:var(--ink)}
 .goal-date-bar input{width:180px;margin:0;font-size:16px}
+.goal-date-bar .date-field{margin:0}
+.goal-date-bar .date-field input{padding-right:38px;cursor:pointer}
+.date-picker-popup{width:320px;max-width:calc(100vw - 24px)}
+.date-picker-nav .date-picker-month{font-size:16px;padding:6px 8px;flex:1;background:var(--theme-input);color:var(--ink)}
+.date-picker-days .history-day{font-size:15px;min-height:34px}
+.date-picker-days .history-day:disabled{opacity:.25;cursor:default}
+.date-picker-days .history-day:hover:not(:disabled){background:var(--theme-soft);color:var(--ink)}
+.date-picker-days .history-day[aria-pressed=true]{background:var(--theme-accent);color:#fff;border-color:var(--theme-accent-dark)}
 .goal-date-bar p{margin:0}
 .history{margin-top:0}
 .calendar-edit{width:auto;margin:16px 0;padding:12px 18px;font-size:16px}
@@ -381,4 +389,7 @@ header{display:grid;grid-template-columns:auto 1fr auto;gap:24px}
   .editor-body,.schedule-column>.plan{align-self:start;min-width:0}
 }
 
+.history-linked-plans{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin:14px 0}
+.history-linked-plans .secondary{white-space:normal;text-align:left;line-height:1.6}
+.time-label .time-date{color:var(--theme-accent-dark);margin-bottom:3px}
 

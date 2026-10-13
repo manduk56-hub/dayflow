@@ -23,8 +23,11 @@ const defaults = { tasks:[{id:'project',name:'프로젝트',weight:5},{id:'engli
 let state = structuredClone(defaults), plan = null, done = [], builtFrom = '', planVersion = 2, toastTimer;
 let flowView='list', selectedCircleRow=0,copyingPlanImage=false;
 let planDate=DayflowHistory.dateKey(),historyRecords={},historyReady=true;
+let observedToday=planDate;
 let historyDate=planDate,historyMonth=planDate.slice(0,7);
 let datePlans={},plansReady=true,activeTab="goals";
+const mainTabs=['goals','calendar'];
+const tabPanels={goals:'goals-panel',calendar:'history'};
 try{datePlans=DayflowPlanner.readPlans(localState.getItem("dayflow-plans-v1"));}catch{plansReady=false;}
 let scheduleAlarm=new DayflowAlarm.ScheduleAlarm(),alarmSource='',alarmSound=true,alarmAudio=null,lastAlarmSaved=0;
 try{const saved=JSON.parse(localState.getItem('dayflow-alarm-v1'));if(saved){scheduleAlarm=new DayflowAlarm.ScheduleAlarm(saved.alarm);alarmSource=saved.source||'';alarmSound=saved.sound!==false;}}catch{}
@@ -77,26 +80,42 @@ function selectPlanDate(date){
   renderTasks();update(true);renderPlan();
 }
 function setMainTab(tab){
-  DayflowTimePicker.close();DayflowMonthPicker.close();
+  DayflowTimePicker.close();DayflowMonthPicker.close();DayflowDatePicker.close();
   activeTab=tab;
-  for(const name of ['goals','calendar']){const button=$('tab-'+name);button.setAttribute('aria-selected',String(name===tab));button.tabIndex=name===tab?0:-1;}
-  $('goals-panel').hidden=tab!=='goals';$('history').hidden=tab!=='calendar';
+  for(const name of mainTabs){const button=$('tab-'+name);button.setAttribute('aria-selected',String(name===tab));button.tabIndex=name===tab?0:-1;$(tabPanels[name]).hidden=name!==tab;}
   if(tab==='calendar')renderHistory();
   renderHeaderDate();
   window.scrollTo(0,0);
 }
+function syncToday(){
+  const today=DayflowHistory.dateKey();
+  if(today===observedToday)return;
+  const selectedHistoryDate=historyDate,selectedHistoryMonth=historyMonth;
+  // Follow the local day only while editing today; keep explicitly selected dates.
+  const keepOvernight=DayflowHistory.activeOvernight(planDate,state.settings);
+  if(planDate===observedToday&&!keepOvernight){
+    DayflowTimePicker.close();DayflowMonthPicker.close();DayflowDatePicker.close();
+    selectPlanDate(today);
+    if(planDate!==today)return; // Retry later if saving the previous day failed.
+  }
+  if(selectedHistoryDate===observedToday&&!keepOvernight){historyDate=today;historyMonth=today.slice(0,7);}
+  else{historyDate=selectedHistoryDate;historyMonth=selectedHistoryMonth;}
+  observedToday=today;
+  renderHistory();
+}
 function renderHeaderDate(){
   const date=activeTab==='calendar'?historyDate:planDate;
   const weekday=['일','월','화','수','목','금','토'][new Date(date+'T00:00:00').getDay()];
-  $('header-date-label').textContent=activeTab==='calendar'?'선택한 날짜':'목표 날짜';
+  $('header-date-label').textContent=activeTab==='calendar'?'선택한 날짜':'일정 시작 날짜';
   $('header-date').dateTime=date;
   $('header-date').textContent=`${date.replaceAll('-','.')} (${weekday})${date===DayflowHistory.dateKey()?' · 오늘':''}`;
 }
-for(const tab of ['goals','calendar']){
+for(const tab of mainTabs){
   $('tab-'+tab).addEventListener('click',()=>setMainTab(tab));
-  $('tab-'+tab).addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const next=event.key==='Home'?'goals':event.key==='End'?'calendar':tab==='goals'?'calendar':'goals';setMainTab(next);$('tab-'+next).focus();}});
+  $('tab-'+tab).addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const index=mainTabs.indexOf(tab),next=event.key==='Home'?mainTabs[0]:event.key==='End'?mainTabs.at(-1):mainTabs[(index+(event.key==='ArrowRight'?1:mainTabs.length-1))%mainTabs.length];setMainTab(next);$('tab-'+next).focus();}});
 }
 $('goal-date').value=planDate;
+DayflowDatePicker.attach($('goal-date'),$('goal-date-picker'));
 $('goal-date').addEventListener('change',()=>{
   const date=$('goal-date').value;
   if(!DayflowHistory.validDate(date)){ $('goal-date').value=historyDate;return; }
@@ -104,6 +123,10 @@ $('goal-date').addEventListener('change',()=>{
 });
 $('edit-history-date').addEventListener('click',()=>{selectPlanDate(historyDate);if(planDate===historyDate){setMainTab('goals');$('new-task').focus();window.scrollTo(0,0);}});
 function duration(n) { return n>=60 ? `${Math.floor(n/60)}시간${n%60?' '+n%60+'분':''}` : `${n}분`; }
+function planDateRange(date,start,end){
+  const last=DayflowHistory.dateAtMinute(date,end);
+  return `${date.replaceAll('-','.')} ${Scheduler.formatTime(start)} → ${last.replaceAll('-','.')} ${Scheduler.formatTime(end%1440)}`;
+}
 function el(tag, className, text) { const node=document.createElement(tag); if(className) node.className=className; if(text!==undefined) node.textContent=text; return node; }
 function signature() { return JSON.stringify(state); }
 function renderStale() {
@@ -126,7 +149,7 @@ function update(initial=false) {
   $('error').textContent='';
   $('task-count').textContent=`${state.tasks.filter(t=>t.type!=='fixed').length}개`;
   $('fixed-count').textContent=`${state.tasks.filter(t=>t.type==='fixed').length}개`;
-  try { const preview=Scheduler.createSchedule(state.tasks,state.settings); $('window-note').textContent=`${duration(preview.total)}${preview.end>=1440?' · 다음 날':''}`;
+  try { const preview=Scheduler.createSchedule(state.tasks,state.settings); $('window-note').textContent=preview.end>=1440?`${duration(preview.total)} · ${DayflowHistory.dateAtMinute(planDate,preview.end).replaceAll('-','.')} 종료`:`${duration(preview.total)} · 당일 종료`;
     $('task-list').querySelectorAll('.share').forEach(node=>{const allocation=preview.allocations.find(t=>t.id===node.closest('.task').dataset.taskId);node.textContent=`${allocation.minutes}분`;node.title='비중에 따른 배정 시간';});
     if(plan&&(!initial||(planVersion===2&&builtFrom!==signature())))applyLivePlan(preview);
   } catch(e) { $('window-note').textContent=e.message; $('error').textContent=e.message;$('task-list').querySelectorAll('.share').forEach(n=>n.textContent='—'); }
@@ -275,7 +298,8 @@ function renderTasks() {
   });
 }
 function renderPlan() {
-  $('plan-heading-title').textContent=plan?`일정 · ${planDate.replaceAll('-','.')}`:'일정';
+  $('plan-heading-title').textContent=plan?`일정 · ${planDate.replaceAll('-','.')}${plan.end>=1440?` → ${DayflowHistory.dateAtMinute(planDate,plan.end).replaceAll('-','.')}`:''}`:'일정';
+  $('plan-heading-title').title=plan?planDateRange(planDate,plan.start,plan.end):'';
   $('plan-empty').hidden=!!plan; $('plan-content').hidden=!plan; if(!plan)return;
   $('total').textContent=duration(plan.total);$('work').textContent=duration(plan.work);$('break').textContent=duration(plan.breakTime);
   $('fixed-metric').hidden=!plan.fixedTime;$('fixed-total').textContent=duration(plan.fixedTime||0);document.querySelector('.metrics').classList.toggle('has-fixed',!!plan.fixedTime);
@@ -296,6 +320,7 @@ function renderPlan() {
   $('timeline').replaceChildren();
   plan.rows.forEach((r,i)=>{
     const row=el('div',`timeline-row ${r.type==='break'||r.type==='idle'?'break':''} ${r.kind==='fixed'?'fixed-row':''} ${done.includes(i)?'done':''}`), time=el('div','time-label',Scheduler.formatTime(r.start));time.append(el('small',``, `— ${Scheduler.formatTime(r.end)}`));
+    if(plan.end>=1440){const startDate=DayflowHistory.dateAtMinute(planDate,r.start),endDate=DayflowHistory.dateAtMinute(planDate,r.end);time.prepend(el('small','time-date',`${startDate.slice(5).replace('-','.')} ${startDate!==endDate?'→ '+endDate.slice(5).replace('-','.'):''}`));}
     const block=el(r.type==='task'?'label':'div','block');if(r.type==='task') {block.style.borderLeftColor=colors[r.color]; const check=el('input');check.type='checkbox';check.checked=done.includes(i);check.setAttribute('aria-label',`${r.name} ${Scheduler.formatTime(r.start)} 완료`);check.addEventListener('change',()=>setCompletion(i,check.checked));block.append(check);}
     block.append(el('span','name',r.type==='break'?'휴식':r.name),el('span','duration',`${r.kind==='fixed'?'고정 · ':''}${r.duration}분`));row.append(time,block);$('timeline').append(row);
   });
@@ -443,31 +468,44 @@ function renderHistory(){
   if(!plansReady)$('history-error').textContent='날짜별 일정을 읽지 못했어요. 기존 데이터를 보호하기 위해 저장을 중단했어요.';
   if(!historyReady)$('history-error').textContent='저장된 하루 기록을 읽지 못했어요. 기존 기록을 보호하기 위해 기록 저장을 중단했어요.';
   const today=DayflowHistory.dateKey();$('history-month').value=historyMonth;DayflowMonthPicker.display($('history-month'),$('history-month-label'));
-  const calendar=$('history-calendar'),monthRecords=Object.values(historyRecords).filter(r=>r.date.startsWith(historyMonth));calendar.replaceChildren();
+  const calendar=$('history-calendar'),views=new Map(DayflowHistory.monthDays(historyMonth).map(date=>[date,DayflowHistory.dayView(historyRecords,date)]));calendar.replaceChildren();
   for(const date of DayflowHistory.monthDays(historyMonth)){
-    const record=historyRecords[date],draft=datePlans[date],stats=DayflowHistory.summary(record),button=el('button','history-day',Number(date.slice(8)));
+    const view=views.get(date),draft=datePlans[date],stats=view.stats,hasRecord=!!historyRecords[date]||view.sourceDates.length>0,continued=view.sourceDates.some(source=>source!==date),button=el('button','history-day',Number(date.slice(8)));
     button.type='button';button.dataset.date=date;button.dataset.heat=stats.focus>=240?4:stats.focus>=120?3:stats.focus>=60?2:stats.focus>0?1:0;
-    button.classList.toggle('other-month',!date.startsWith(historyMonth));button.classList.toggle('has-record',!!record||!!draft?.tasks.length);button.classList.toggle('is-today',date===today);
-    button.setAttribute('aria-pressed',String(date===historyDate));button.setAttribute('aria-label',`${date}${date===today?' 오늘':''}, ${record?`완료 ${stats.count}구간, 집중 ${stats.focus}분`:draft?.tasks.length?`목표 ${draft.tasks.length}개`:'일정 없음'}`);
+    button.classList.toggle('other-month',!date.startsWith(historyMonth));button.classList.toggle('has-record',hasRecord||!!draft?.tasks.length);button.classList.toggle('is-today',date===today);
+    button.setAttribute('aria-pressed',String(date===historyDate));button.setAttribute('aria-label',`${date}${date===today?' 오늘':''}, ${hasRecord?`완료 ${stats.count}구간, 집중 ${stats.focus}분${continued?' · 전날부터 이어진 일정':''}`:draft?.tasks.length?`목표 ${draft.tasks.length}개`:'일정 없음'}`);
     button.title=button.getAttribute('aria-label');
     button.addEventListener('click',()=>{historyDate=date;historyMonth=date.slice(0,7);renderHistory();$('history-calendar').querySelector(`[data-date="${date}"]`)?.focus({preventScroll:true});});calendar.append(button);
   }
-  const monthFocus=monthRecords.reduce((sum,r)=>sum+DayflowHistory.summary(r).focus,0);
-  $('history-month-summary').textContent=`이번 달 기록 ${monthRecords.length}일 · 완료 집중 ${duration(monthFocus)}`;
+  const monthViews=[...views].filter(([date])=>date.startsWith(historyMonth)),monthFocus=monthViews.reduce((sum,[,view])=>sum+view.stats.focus,0),recordDays=monthViews.filter(([date,view])=>historyRecords[date]||view.sourceDates.length).length;
+  $('history-month-summary').textContent=`이번 달 기록 ${recordDays}일 · 완료 집중 ${duration(monthFocus)}`;
   $('history-date').textContent=`${historyDate.replaceAll('-','.')} 일정`;
-  const record=historyRecords[historyDate],stats=DayflowHistory.summary(record),list=$('history-completed'),timeline=$('history-timeline');list.replaceChildren();timeline.replaceChildren();
-  $('history-plan').hidden=!record;
-  if(!record){
+  const view=DayflowHistory.dayView(historyRecords,historyDate),stats=view.stats,list=$('history-completed'),timeline=$('history-timeline'),hasRecord=!!historyRecords[historyDate]||view.sourceDates.length>0;list.replaceChildren();timeline.replaceChildren();
+  $('history-plan').hidden=!view.rows.length;
+  $('history-plan').querySelector('summary').textContent='이 날짜의 일정 · 자정 기준';
+  const links=$('history-linked-plans');links.replaceChildren();links.hidden=true;
+  for(const sourceDate of view.sourceDates.filter(date=>date!==historyDate)){
+    links.hidden=false;
+    const button=el('button','secondary',`${sourceDate.replaceAll('-','.')}에 시작한 밤샘 일정 편집`);button.type='button';
+    button.addEventListener('click',()=>{selectPlanDate(sourceDate);if(planDate===sourceDate){setMainTab('goals');window.scrollTo(0,0);}});links.append(button);
+  }
+  if(!hasRecord){
     const tasks=datePlans[historyDate]?.tasks||[];
     $('history-summary').textContent=tasks.length?`목표 ${tasks.length}개 · 아직 시간표를 만들지 않았어요.`:'아직 일정이 없어요. 목표와 약속을 추가해보세요.';
     tasks.forEach(task=>list.append(el('p','helper',task.name||'이름 없는 목표')));return;
   }
-  $('history-summary').textContent=`완료 ${stats.count}구간 · 집중 ${duration(stats.focus)}${stats.fixed?` · 고정 ${duration(stats.fixed)}`:''}`;
-  if(!stats.count)list.append(el('p','helper','일정이 저장됐어요. 완료한 구간을 체크하면 여기에 기록돼요.'));
-  for(const item of record.completed){
-    const row=item.row,entry=el('div','history-entry');entry.append(el('strong','',`✓ ${row.name}`),el('span','',`${Scheduler.formatTime(row.start)} ~ ${Scheduler.formatTime(row.end)} · ${row.kind==='fixed'?'고정 · ':''}${duration(row.duration)}`));list.append(entry);
+  const continued=view.sourceDates.some(date=>date!==historyDate);
+  $('history-summary').textContent=`완료 ${stats.count}구간 · 집중 ${duration(stats.focus)}${stats.fixed?` · 고정 ${duration(stats.fixed)}`:''}${continued?' · 전날부터 이어진 일정 포함':''}`;
+  if(continued)links.prepend(el('p','helper','밤샘 일정의 수정·완료 체크는 시작한 날짜에서 이어서 해요. 이 날짜의 시간만 나누어 표시해요.'));
+  if(!historyRecords[historyDate]&&datePlans[historyDate]?.tasks.length){
+    list.append(el('p','helper',`이 날짜의 목표 ${datePlans[historyDate].tasks.length}개 · 아직 시간표를 만들지 않았어요.`));
+    datePlans[historyDate].tasks.forEach(task=>list.append(el('p','helper',task.name||'이름 없는 목표')));
   }
-  record.plan.rows.forEach((row,i)=>{const entry=el('div','history-entry history-planned');entry.append(el('strong','',`${record.done.includes(i)?'✓ ':''}${row.type==='break'?'휴식':row.name}`),el('span','',`${Scheduler.formatTime(row.start)} ~ ${Scheduler.formatTime(row.end)} · ${duration(row.duration)}`));timeline.append(entry);});
+  if(!stats.count)list.append(el('p','helper','일정이 저장됐어요. 완료한 구간을 체크하면 여기에 기록돼요.'));
+  for(const item of view.completed){
+    const row=item.row,entry=el('div','history-entry');entry.append(el('strong','',`✓ ${row.name}`),el('span','',`${Scheduler.formatTime(row.start)} ~ ${Scheduler.formatTime(row.end)} · ${row.kind==='fixed'?'고정 · ':''}${duration(row.duration)}${item.sourceDate!==historyDate?' · 전날 시작':''}`));list.append(entry);
+  }
+  view.rows.forEach(({row,done,sourceDate})=>{const entry=el('div','history-entry history-planned');entry.append(el('strong','',`${done?'✓ ':''}${row.type==='break'?'휴식':row.name}`),el('span','',`${Scheduler.formatTime(row.start)} ~ ${Scheduler.formatTime(row.end)} · ${duration(row.duration)}${sourceDate!==historyDate?' · 전날 시작':''}`));timeline.append(entry);});
 }
 function changeHistoryMonth(offset){
   const date=new Date(historyMonth+'-01T00:00:00Z');date.setUTCMonth(date.getUTCMonth()+offset);
@@ -480,6 +518,11 @@ $('history-next').addEventListener('click',()=>changeHistoryMonth(1));
 $('history-month').addEventListener('change',()=>{const value=$('history-month').value;if(DayflowHistory.validDate(value+'-01')){historyMonth=value;historyDate=value+'-01';renderHistory();}});
 $('history-today').addEventListener('click',()=>{historyDate=DayflowHistory.dateKey();historyMonth=historyDate.slice(0,7);renderHistory();});
 renderTasks();update(true);renderPlan();
+// Save the restored date before opening today's independent goals and completion.
+if(!DayflowHistory.activeOvernight(planDate,state.settings))selectPlanDate(observedToday);
+setInterval(syncToday,1000);
+window.addEventListener('focus',syncToday);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncToday();});
 
 function saveAlarm(){
   try{localState.setItem('dayflow-alarm-v1',JSON.stringify({alarm:scheduleAlarm.snapshot(),source:alarmSource,sound:alarmSound}));lastAlarmSaved=Date.now();}
