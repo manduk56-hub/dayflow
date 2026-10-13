@@ -38,11 +38,11 @@ ipcMain.handle('schedule-alarm',(_,payload)=>{
   notification.show();return true;
 });
 ipcMain.handle('export-file', async (_, payload) => {
-  if (!payload || !['csv', 'pdf'].includes(payload.type)) throw new Error('지원하지 않는 형식입니다.');
+  if (!payload || !['csv', 'pdf', 'png'].includes(payload.type)) throw new Error('지원하지 않는 형식입니다.');
   const type = payload.type;
   const { canceled, filePath } = await dialog.showSaveDialog(window, { defaultPath: `Dayflow-일정표.${type}`, filters: [{ name: type.toUpperCase(), extensions: [type] }] });
   if (canceled || !filePath) return false;
-  const contents = type === 'pdf' ? await require('./image-export.cjs').exportPlanPDF({ BrowserWindow }, payload.html) : '\ufeff' + String(payload.content || '');
+  const contents = type === 'png' ? (await require('./image-export.cjs').renderPlanImage({ BrowserWindow }, payload.html)).toPNG() : type === 'pdf' ? await require('./image-export.cjs').exportPlanPDF({ BrowserWindow }, payload.html) : '\ufeff' + String(payload.content || '');
   await fs.writeFile(filePath, contents);
   return true;
 });

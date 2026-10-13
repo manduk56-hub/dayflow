@@ -21,7 +21,7 @@ const $ = id => document.getElementById(id);
 const colors = ['#7560b2','#b77735','#367f77','#b05c83','#637d42','#b85e48'];
 const defaults = { tasks:[{id:'project',name:'프로젝트',weight:5},{id:'english',name:'영어 공부',weight:3},{id:'reading',name:'독서',weight:2}], settings:{start:'14:00',end:'18:00',focus:50,rest:10} };
 let state = structuredClone(defaults), plan = null, done = [], builtFrom = '', planVersion = 2, toastTimer;
-let flowView='list', selectedCircleRow=0,copyingPlanImage=false;
+let flowView='list', selectedCircleRow=0,copyingPlanImage=false,downloadingPlanImage=false;
 let planDate=DayflowHistory.dateKey(),historyRecords={},historyReady=true;
 let observedToday=planDate;
 let historyDate=planDate,historyMonth=planDate.slice(0,7);
@@ -136,6 +136,7 @@ function renderStale() {
   $('stale').textContent='입력을 확인해주세요. 현재 일정은 마지막으로 계산한 결과입니다.';
   $('pdf').disabled=$('csv').disabled=!!plan && builtFrom!==signature();
   $('copy-image').disabled=copyingPlanImage||!plan||builtFrom!==signature();
+  $('download-image').disabled=downloadingPlanImage||!plan||builtFrom!==signature();
   renderScheduleAlarm();
 }
 function applyLivePlan(nextPlan) {
@@ -483,6 +484,16 @@ $('copy-image').addEventListener('click',async()=>{
   finally{copyingPlanImage=false;$('copy-image').textContent='이미지 복사';renderStale();}
 });
 $('pdf').addEventListener('click',()=>exportPlan('pdf'));$('csv').addEventListener('click',()=>exportPlan('csv'));
+$('download-image').addEventListener('click',async()=>{
+  if(!plan||builtFrom!==signature()||downloadingPlanImage)return;
+  if(!window.desktop?.exportFile){toast('이미지 다운로드는 Dayflow 프로그램에서 사용할 수 있어요.');return;}
+  downloadingPlanImage=true;renderStale();$('download-image').textContent='저장 중…';
+  try{
+    const saved=await window.desktop.exportFile({type:'png',html:planImageHTML()});
+    if(saved)toast('전체 일정표 이미지를 PNG로 저장했어요.');
+  }catch{toast('이미지 저장에 실패했어요. 저장 위치를 확인해주세요.');}
+  finally{downloadingPlanImage=false;$('download-image').textContent='이미지 다운로드';renderStale();}
+});
 function renderHistory(){
   $('goal-date').value=historyDate;
   renderHeaderDate();
